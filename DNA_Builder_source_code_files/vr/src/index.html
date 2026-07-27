@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
+    />
+    <meta name="theme-color" content="#07111f" />
+    <title>DNA Builder · Quest Lab</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", sans-serif;
+      }
+
+      * { box-sizing: border-box; }
+
+      html, body, #app {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        overflow: hidden;
+        background: #07111f;
+      }
+
+      canvas { display: block; }
+
+      .panel {
+        position: fixed;
+        z-index: 10;
+        top: 18px;
+        left: 18px;
+        width: min(360px, calc(100vw - 36px));
+        padding: 18px;
+        border: 1px solid rgba(125, 211, 252, 0.22);
+        border-radius: 18px;
+        background: rgba(6, 15, 29, 0.88);
+        box-shadow: 0 18px 54px rgba(0, 0, 0, 0.38);
+        backdrop-filter: blur(18px);
+      }
+
+      .eyebrow {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 6px;
+        color: #7dd3fc;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+
+      .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #34d399;
+        box-shadow: 0 0 14px #34d399;
+      }
+
+      h1 {
+        margin: 0;
+        color: #f8fafc;
+        font-size: 25px;
+        letter-spacing: -0.04em;
+      }
+
+      .subhead {
+        margin: 6px 0 16px;
+        color: #94a3b8;
+        font-size: 13px;
+        line-height: 1.45;
+      }
+
+      .field-label {
+        display: block;
+        margin: 12px 0 6px;
+        color: #cbd5e1;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      input, select, button {
+        border: 1px solid rgba(148, 163, 184, 0.24);
+        border-radius: 10px;
+        color: #f8fafc;
+        background: rgba(15, 23, 42, 0.92);
+        font: inherit;
+      }
+
+      input, select {
+        width: 100%;
+        min-height: 42px;
+        padding: 0 12px;
+        outline: none;
+      }
+
+      input:focus, select:focus {
+        border-color: #38bdf8;
+        box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.14);
+      }
+
+      .row {
+        display: grid;
+        grid-template-columns: 1fr 110px;
+        gap: 10px;
+      }
+
+      .row-even {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+
+      .checks {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 12px 0;
+        color: #cbd5e1;
+        font-size: 13px;
+      }
+
+      .checks input {
+        width: 16px;
+        min-height: 16px;
+        accent-color: #38bdf8;
+      }
+
+      .actions {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 10px;
+      }
+
+      button {
+        min-height: 42px;
+        padding: 0 15px;
+        cursor: pointer;
+        font-weight: 750;
+      }
+
+      button:hover { border-color: rgba(125, 211, 252, 0.65); }
+      button:disabled { cursor: wait; opacity: 0.6; }
+
+      .primary {
+        border-color: #0284c7;
+        background: linear-gradient(135deg, #0284c7, #2563eb);
+      }
+
+      .status {
+        min-height: 20px;
+        margin-top: 12px;
+        color: #94a3b8;
+        font-size: 12px;
+        line-height: 1.4;
+      }
+
+      .status.ok { color: #6ee7b7; }
+      .status.error { color: #fda4af; }
+
+      .help {
+        position: fixed;
+        z-index: 8;
+        right: 18px;
+        bottom: 18px;
+        max-width: 330px;
+        padding: 12px 14px;
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        border-radius: 12px;
+        color: #94a3b8;
+        background: rgba(6, 15, 29, 0.76);
+        font-size: 12px;
+        line-height: 1.5;
+        pointer-events: none;
+      }
+
+      .help strong { color: #e2e8f0; }
+
+      body.xr-active .panel,
+      body.xr-active .help { display: none; }
+
+      @media (max-width: 700px) {
+        .panel { top: 10px; left: 10px; width: calc(100vw - 20px); }
+        .help { display: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app" aria-label="DNA VR viewport"></div>
+
+    <section class="panel" aria-label="DNA VR controls">
+      <div class="eyebrow">
+        <span class="dot"></span>
+        <span id="runtime-label">Starting Quest emulator…</span>
+      </div>
+      <h1>DNA Builder · Quest Lab</h1>
+      <p class="subhead">
+        Build a molecule, enter virtual VR, then use the emulated Quest 3
+        headset and controllers to test scale and interaction.
+      </p>
+
+      <div class="row">
+        <label>
+          <span class="field-label">Sequence</span>
+          <input
+            id="sequence"
+            data-testid="sequence-input"
+            value="ATCGATCG"
+            maxlength="40"
+            autocomplete="off"
+            spellcheck="false"
+          />
+        </label>
+        <label>
+          <span class="field-label">Form</span>
+          <select id="form" data-testid="form-select">
+            <option value="B">B-DNA</option>
+            <option value="A">A-DNA</option>
+            <option value="Z">Z-DNA</option>
+          </select>
+        </label>
+      </div>
+
+      <label class="checks">
+        <input id="hydrogens" type="checkbox" />
+        Include hydrogens (heavier scene)
+      </label>
+
+      <div class="row-even">
+        <label>
+          <span class="field-label">Color mode</span>
+          <select id="color-mode" data-testid="color-mode-select">
+            <option value="residue" selected>Base colors</option>
+            <option value="element">Element colors</option>
+            <option value="chain">Chain colors</option>
+          </select>
+        </label>
+        <label>
+          <span class="field-label">Perspective</span>
+          <select id="view-preset" data-testid="view-preset-select">
+            <option value="front" selected>Front / helix</option>
+            <option value="side">Side</option>
+            <option value="top">Top</option>
+            <option value="iso">Isometric</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="row-even">
+        <label>
+          <span class="field-label">Mouse mode</span>
+          <select id="interaction-mode" data-testid="interaction-mode-select">
+            <option value="spin" selected>Spin DNA</option>
+            <option value="camera">Move camera</option>
+          </select>
+        </label>
+        <label>
+          <span class="field-label">Spin axis</span>
+          <select id="spin-axis" data-testid="spin-axis-select">
+            <option value="z" selected>Z · helix roll</option>
+            <option value="y">Y · left/right</option>
+            <option value="x">X · pitch</option>
+          </select>
+        </label>
+      </div>
+
+      <label class="checks">
+        <input id="auto-spin" type="checkbox" />
+        Auto-spin on selected axis
+      </label>
+
+      <div class="actions">
+        <button id="build" class="primary" data-testid="build-button">Build DNA</button>
+        <button id="reset" data-testid="reset-button">Reset pose</button>
+      </div>
+      <div id="status" class="status" role="status">Preparing the scene…</div>
+    </section>
+
+    <aside class="help">
+      <strong>Desktop:</strong> Spin DNA mode: left-drag spins the molecule,
+      wheel zooms, right-drag pans. Move Camera mode: left-drag orbits.<br />
+      <strong>Virtual Quest:</strong> click Enter VR, open the emulator’s Play
+      Mode, and use either controller trigger to grab/release the DNA.
+    </aside>
+  </body>
+</html>
