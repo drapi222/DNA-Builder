@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
+    />
+    <meta name="theme-color" content="#050b14" />
+    <title>DNA Builder · Live VR Mirror</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", sans-serif;
+      }
+
+      * { box-sizing: border-box; }
+
+      html, body, #mirror-app {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        overflow: hidden;
+        background: #050b14;
+      }
+
+      canvas { display: block; }
+
+      .hud {
+        position: fixed;
+        z-index: 10;
+        top: 18px;
+        left: 18px;
+        width: min(390px, calc(100vw - 36px));
+        padding: 16px;
+        border: 1px solid transparent;
+        border-radius: 18px;
+        color: #dbeafe;
+        background:
+          linear-gradient(rgba(5, 11, 20, 0.86), rgba(5, 11, 20, 0.86)) padding-box,
+          linear-gradient(135deg, #22d3ee, #a78bfa, #f472b6) border-box;
+        box-shadow: 0 18px 54px rgba(0, 0, 0, 0.38);
+        backdrop-filter: blur(18px);
+      }
+
+      .eyebrow {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 6px;
+        color: #7dd3fc;
+        font-size: 11px;
+        font-weight: 850;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+
+      .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #f59e0b;
+        box-shadow: 0 0 14px currentColor;
+      }
+
+      .dot.live {
+        color: #34d399;
+        background: #34d399;
+      }
+
+      .dot.offline {
+        color: #f87171;
+        background: #f87171;
+      }
+
+      h1 {
+        margin: 0;
+        color: #f8fafc;
+        font-size: 24px;
+        letter-spacing: -0.04em;
+      }
+
+      .subhead {
+        margin: 6px 0 14px;
+        color: #94a3b8;
+        font-size: 13px;
+        line-height: 1.45;
+      }
+
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+
+      .stat {
+        min-height: 54px;
+        padding: 10px;
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        border-radius: 12px;
+        background: rgba(15, 23, 42, 0.72);
+      }
+
+      .stat-label {
+        display: block;
+        margin-bottom: 4px;
+        color: #94a3b8;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+
+      .stat-value {
+        color: #f8fafc;
+        font-size: 13px;
+        font-weight: 750;
+      }
+
+      .actions {
+        display: flex;
+        gap: 10px;
+      }
+
+      button {
+        min-height: 36px;
+        padding: 0 14px;
+        border: 1px solid rgba(125, 211, 252, 0.36);
+        border-radius: 999px;
+        color: #f8fafc;
+        background: rgba(15, 23, 42, 0.94);
+        cursor: pointer;
+        font: inherit;
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      button:hover {
+        border-color: rgba(125, 211, 252, 0.72);
+        box-shadow: 0 0 22px rgba(56, 189, 248, 0.16);
+      }
+
+      .help {
+        position: fixed;
+        z-index: 8;
+        right: 18px;
+        bottom: 18px;
+        max-width: 360px;
+        padding: 12px 14px;
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        border-radius: 12px;
+        color: #94a3b8;
+        background: rgba(5, 11, 20, 0.76);
+        font-size: 12px;
+        line-height: 1.5;
+        pointer-events: none;
+      }
+
+      .help strong { color: #e2e8f0; }
+
+      body.fullscreen .hud,
+      body.fullscreen .help { opacity: 0.16; }
+
+      body.fullscreen .hud:hover,
+      body.fullscreen .help:hover { opacity: 1; }
+
+      @media (max-width: 700px) {
+        .hud { top: 10px; left: 10px; width: calc(100vw - 20px); }
+        .stats { grid-template-columns: 1fr; }
+        .help { display: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="mirror-app" aria-label="Live VR mirror viewport"></div>
+
+    <section class="hud" aria-label="Live VR mirror status">
+      <div class="eyebrow">
+        <span id="connection-dot" class="dot"></span>
+        <span id="connection-label">Waiting for headset…</span>
+      </div>
+      <h1>Live VR Mirror</h1>
+      <p class="subhead">
+        Keep this page open on the laptop. When the Quest opens the VR lab, this
+        view follows the headset and DNA pose for demos or screen recording.
+      </p>
+
+      <div class="stats">
+        <div class="stat">
+          <span class="stat-label">Molecule</span>
+          <span id="molecule-label" class="stat-value">No source yet</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">View</span>
+          <span id="view-label" class="stat-value">Idle</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Atoms</span>
+          <span id="atom-label" class="stat-value">—</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Bonds</span>
+          <span id="bond-label" class="stat-value">—</span>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button id="fullscreen-button" type="button">Fullscreen mirror</button>
+        <button id="reset-camera-button" type="button">Use overview camera</button>
+      </div>
+    </section>
+
+    <aside class="help">
+      <strong>Launch pairing:</strong> laptop opens <code>/mirror</code>; Quest
+      opens <code>/</code> and enters VR. If this waits forever, reload the
+      Quest page after the mirror is open.
+    </aside>
+  </body>
+</html>

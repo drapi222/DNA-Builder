@@ -1,0 +1,15 @@
+DNA_Builder_yesterday_code_2026-07-30.zip
+
+Created on 2026-07-31.
+
+Contains a curated full source-code snapshot:
+- README.md and .gitignore
+- dna_builder/
+- docs/
+- gui/
+- scripts/
+- vr/
+
+It intentionally excludes generated dependencies, node_modules, .git, .venv,
+__pycache__, compiled Python files, dist output, and the local vr/.bin tunnel
+binary/archive.

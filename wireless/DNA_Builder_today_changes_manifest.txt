@@ -1,0 +1,14 @@
+DNA_Builder_today_changes_2026-07-31.zip
+
+Created on 2026-07-31.
+
+Contains the current changed VR source files:
+- vr/README.md
+- vr/dev-server.mjs
+- vr/src/index.html
+- vr/src/main.js
+- vr/src/mirror.html
+- vr/src/mirror.js
+
+This is code-only. It intentionally excludes generated dependencies, node_modules,
+.git, .venv, and the locally downloaded Cloudflare tunnel binary/archive.
